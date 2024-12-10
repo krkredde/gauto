@@ -124,31 +124,31 @@ check_ci_status() {
 }
 
 # Function to merge the Pull Request once all checks pass
-merge_pr() {
-  echo "Merging PR #$PR_NUMBER..."
+# merge_pr() {
+#   echo "Merging PR #$PR_NUMBER..."
 
-  # Merge the pull request
-  merge_response=$(curl -s -X PUT "$API_URL/repos/$REPO_OWNER/$REPO_NAME/pulls/$PR_NUMBER/merge" \
-    -H "$HEADERS" \
-    -d @- <<EOF
-{
-  "commit_title": "Merging PR #$PR_NUMBER",
-  "merge_method": "merge"
-}
-EOF
-  )
+#   # Merge the pull request
+#   merge_response=$(curl -s -X PUT "$API_URL/repos/$REPO_OWNER/$REPO_NAME/pulls/$PR_NUMBER/merge" \
+#     -H "$HEADERS" \
+#     -d @- <<EOF
+# {
+#   "commit_title": "Merging PR #$PR_NUMBER",
+#   "merge_method": "merge"
+# }
+# EOF
+#   )
 
-  # Check if the merge was successful
-  merge_state=$(echo "$merge_response" | grep -o '"state":\s*"[^"]*' | sed 's/"state": "//')
+#   # Check if the merge was successful
+#   merge_state=$(echo "$merge_response" | grep -o '"state":\s*"[^"]*' | sed 's/"state": "//')
 
-  if [ "$merge_state" == "merged" ]; then
-    echo "PR #$PR_NUMBER successfully merged into $BASE_BRANCH."
-  else
-    echo "Error: PR merge failed."
-    echo "Response from GitHub API: $merge_response"
-    exit 1
-  fi
-}
+#   if [ "$merge_state" == "merged" ]; then
+#     echo "PR #$PR_NUMBER successfully merged into $BASE_BRANCH."
+#   else
+#     echo "Error: PR merge failed."
+#     echo "Response from GitHub API: $merge_response"
+#     exit 1
+#   fi
+# }
 
 # Step 1: Create the Pull Request
 create_pr
