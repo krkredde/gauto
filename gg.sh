@@ -8,7 +8,6 @@ BRANCH_NAME="auto_merge"            # Replace with your feature branch
 BASE_BRANCH="main"                  # The base branch to merge into (usually 'main')
 PR_TITLE="Automated PR to main"     # The title of the PR
 PR_BODY="This PR is automatically created from the auto_merge branch."
-GRAPHQL_API_URL="https://api.github.com/graphql"
 API_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pulls"
 
 # Function to create Pull Request using GitHub REST API
@@ -55,8 +54,10 @@ get_check_status() {
   failure_count=0
   in_progress_count=0
 
-  # Process and display the status of each check
-  while read -r check_status && read -r check_context; do
+  # Use a regular loop to process the check statuses and contexts
+  count=0
+  while read -r check_status; do
+    check_context=$(echo "$check_contexts" | sed -n "$((count + 1))p")
     echo "Check: $check_context"
     echo "Status: $check_status"
 
@@ -69,7 +70,8 @@ get_check_status() {
       all_checks_completed=false
     fi
     echo "-----"
-  done < <(paste <(echo "$check_statuses") <(echo "$check_contexts"))
+    count=$((count + 1))
+  done <<< "$check_statuses"
 
   echo "Summary of Checks:"
   echo "Successful Checks: $success_count"
