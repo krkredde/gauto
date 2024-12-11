@@ -1,4 +1,4 @@
-################## #!/bin/bash
+##################### #!/bin/bash
 # #
 # # # Configuration variables
 # # GITHUB_TOKEN="xxx"    # GitHub Personal Access Token (replace with your token)
