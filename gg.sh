@@ -233,4 +233,36 @@ EOF
   PR_ID=$(echo "$pr_response" | grep -o '"id":\s*"[^"]*' | sed 's/"id": "//')
 
   if [ -z "$PR_ID" ]; then
-    echo "Error
+    echo "Error: Failed to fetch PR ID."
+    exit 1
+  fi
+
+  echo "$PR_ID"
+}
+
+# Main execution
+
+# Step 1: Create the Pull Request
+create_pr
+
+# Step 2: Monitor the CI checks until they pass
+while true; do
+  # Get the commit SHA of the PR's latest commit
+  commit_sha=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+    "$GRAPHQL_API_URL/repos/$REPO_OWNER/$REPO_NAME/pulls/$PR_NUMBER/commits" | \
+    grep -o '"sha":\s*"[^"]*' | sed 's/"sha": "//' | head -n 1)
+
+  if get_check_status "$commit_sha"; then
+    break
+  fi
+
+  # Wait for checks to complete (poll every 30 seconds)
+  sleep 30
+done
+
+# Step 3: Auto-merge the PR if allowed
+if [ "$ALLOW_AUTO_MERGE" == true ]; then
+  merge_pr
+else
+  echo "Auto-merge is disabled. PR not merged."
+fi
