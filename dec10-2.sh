@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration variables
-GITHUB_TOKEN="YOUR_GITHUB_TOKEN"    # Replace with your GitHub Personal Access Token
+GITHUB_TOKEN="xxxxx"    # Replace with your GitHub Personal Access Token
 REPO_OWNER="krkredde"               # Replace with the GitHub repository owner
 REPO_NAME="gauto"                   # Replace with the GitHub repository name
 BRANCH_NAME="auto_merge"            # Replace with your feature branch
@@ -74,6 +74,8 @@ check_ci_status() {
     # Loop through each check run and classify them by conclusion
     count=0
     total_checks=0
+    all_checks_completed=true
+
     for check in $check_names; do
       status=$(echo "$check_statuses" | sed -n "${count}p")
       conclusion=$(echo "$check_conclusions" | sed -n "${count}p")
@@ -90,8 +92,10 @@ check_ci_status() {
       # Classify checks based on their status and conclusion
       if [ "$status" == "in_progress" ]; then
         in_progress_count=$((in_progress_count + 1))
+        all_checks_completed=false  # At least one check is still in progress
       elif [ "$status" == "queued" ]; then
         queued_count=$((queued_count + 1))
+        all_checks_completed=false  # At least one check is still queued
       elif [ "$conclusion" == "success" ]; then
         successful_count=$((successful_count + 1))
       elif [ "$conclusion" == "failure" ] || [ "$conclusion" == "neutral" ]; then
@@ -111,7 +115,7 @@ check_ci_status() {
     echo "Queued Checks: $queued_count"
 
     # If there are any checks in progress or queued, wait
-    if [ $in_progress_count -gt 0 ] || [ $queued_count -gt 0 ]; then
+    if [ "$all_checks_completed" == false ]; then
       echo "Checks are still in progress or queued. Waiting..."
     # If all checks are completed and all are successful, merge the PR
     elif [ $successful_count -eq $total_checks ]; then
