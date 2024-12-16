@@ -2,10 +2,10 @@
 
 # Set these values
 GITHUB_TOKEN="your_github_token_here"
-GITHUB_USER="your_github_username"
-REPO_NAME="your_repo_name"
+GITHUB_USER="krkredde"
+REPO_NAME="gauto"
 BASE_BRANCH="main"           # The branch you're merging into (usually 'main')
-FEATURE_BRANCH="feature-branch" # The branch containing your changes
+FEATURE_BRANCH="auto_merge" # The branch containing your changes
 PR_TITLE="Auto PR Title"
 PR_BODY="Auto-generated PR description"
 
@@ -29,11 +29,11 @@ create_pr() {
 EOF
     )
 
-    # Extract PR details
-    PR_URL=$(echo $PR_RESPONSE | jq -r .html_url)
-    PR_ID=$(echo $PR_RESPONSE | jq -r .number)
+    # Extract PR details without jq using grep/awk/sed
+    PR_URL=$(echo "$PR_RESPONSE" | grep -o '"html_url": "[^"]*' | sed 's/"html_url": "//')
+    PR_ID=$(echo "$PR_RESPONSE" | grep -o '"number": [0-9]*' | awk '{print $2}')
 
-    if [[ "$PR_URL" == "null" ]]; then
+    if [[ -z "$PR_URL" || -z "$PR_ID" ]]; then
         echo "Failed to create PR. Response: $PR_RESPONSE"
         exit 1
     fi
@@ -50,18 +50,19 @@ get_pr_checks() {
         "$API_URL/repos/$GITHUB_USER/$REPO_NAME/pulls/$PR_ID/statuses")
 
     # Parse the statuses of each check (success or failure)
-    CHECKS=$(echo $CHECKS_RESPONSE | jq -r '.[].state')
-
-    if [[ -z "$CHECKS" ]]; then
-        echo "No checks found for PR #$PR_ID."
-        return
-    fi
-
     SUCCESS_COUNT=0
     FAILURE_COUNT=0
     PENDING_COUNT=0
 
-    for state in $CHECKS; do
+    # Check if there are any statuses, otherwise exit
+    if [[ $(echo "$CHECKS_RESPONSE" | grep -c 'state') -eq 0 ]]; then
+        echo "No checks found for PR #$PR_ID."
+        return
+    fi
+
+    # Extract the states of the checks and count success, failure, and pending
+    echo "$CHECKS_RESPONSE" | grep -o '"state": "[^"]*' | while read -r line; do
+        state=$(echo "$line" | sed 's/"state": "//')
         if [[ "$state" == "success" ]]; then
             ((SUCCESS_COUNT++))
         elif [[ "$state" == "failure" ]]; then
@@ -116,7 +117,7 @@ merge_pr() {
 EOF
     )
 
-    MERGE_STATUS=$(echo $MERGE_RESPONSE | jq -r .merged)
+    MERGE_STATUS=$(echo "$MERGE_RESPONSE" | grep -o '"merged": [a-z]*' | awk '{print $2}' | tr -d '"')
 
     if [[ "$MERGE_STATUS" == "true" ]]; then
         echo "Pull request #$PR_ID merged successfully."
