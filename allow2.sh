@@ -60,7 +60,11 @@ get_check_names() {
     # Fetch check runs for the commit (associated with the PR)
     CHECK_RUNS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
         "$API_URL/repos/$GITHUB_OWNER/$GITHUB_REPO/commits/$COMMIT_SHA/check-runs")
-    
+
+    # Debug: print the full response to see what is being returned
+    echo "Full API Response for check runs:"
+    echo "$CHECK_RUNS"
+
     # Check if there are any check runs
     if echo "$CHECK_RUNS" | grep -q '"check_name"'; then
         echo "List of check names associated with PR #$PR_NUMBER:"
