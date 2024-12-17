@@ -38,22 +38,33 @@ wait_for_checks() {
     while true; do
         PR_STATUS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
             "$API_URL/repos/$GITHUB_OWNER/$GITHUB_REPO/pulls/$PR_NUMBER")
-        
-        # Check if the PR has passed all checks
+
+        # Check the entire PR status for debugging
+        echo "PR Status Response: $PR_STATUS"
+
+        # Get mergeable status
         MERGEABLE=$(echo "$PR_STATUS" | grep -o '"mergeable": [^,]*' | cut -d ':' -f 2 | tr -d '[:space:]')
-        
+
+        # Check if there are failing checks
+        CHECK_STATUS=$(echo "$PR_STATUS" | grep -o '"state": "[^"]*' | cut -d '"' -f 4)
+        echo "Status of checks: $CHECK_STATUS"
+
         if [[ "$MERGEABLE" == "true" ]]; then
             echo "PR #$PR_NUMBER is mergeable!"
             break
         elif [[ "$MERGEABLE" == "false" ]]; then
             echo "PR #$PR_NUMBER is not mergeable due to conflicts or failed checks."
             exit 1
-        else
-            echo "Waiting for status checks to pass..."
+        elif [[ "$MERGEABLE" == "null" ]]; then
+            echo "PR #$PR_NUMBER is still being processed or there are unresolved conflicts."
             sleep 10  # Wait for 10 seconds before checking again
+        else
+            echo "Unexpected mergeable value: $MERGEABLE. Exiting."
+            exit 1
         fi
     done
 }
+
 
 # Merge the PR
 merge_pr() {
