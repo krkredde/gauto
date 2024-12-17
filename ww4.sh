@@ -2,8 +2,8 @@
 
 # GitHub settings (set your GitHub details)
 GITHUB_TOKEN="your_github_token_here"
-GITHUB_USER="your_github_username"
-REPO_NAME="your_repo_name"
+GITHUB_USER="krkredde"
+REPO_NAME="gauto"
 BASE_BRANCH="main"         # The branch you're merging into (usually 'main')
 FEATURE_BRANCH="auto_merge" # The branch containing your changes
 PR_TITLE="Auto PR Title"
