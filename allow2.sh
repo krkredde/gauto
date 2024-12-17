@@ -31,35 +31,18 @@ EOF
     echo "Pull request created successfully. PR Number: $PR_NUMBER"
 }
 
-# Step 2: Get the latest commit SHA for the PR (from the `SOURCE_BRANCH`)
-get_commit_sha() {
-    echo "Fetching the latest commit SHA for PR #$PR_NUMBER..."
-
-    # Get the commit SHA for the PR's source branch
-    COMMIT_SHA=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-        "$API_URL/repos/$GITHUB_OWNER/$GITHUB_REPO/pulls/$PR_NUMBER" | \
-        grep -o '"sha": "[^"]*' | cut -d '"' -f 4)
-
-    if [ -z "$COMMIT_SHA" ]; then
-        echo "Unable to retrieve commit SHA for PR #$PR_NUMBER."
+# Step 2: Get the check runs associated with the PR
+get_pr_check_runs() {
+    if [ -z "$PR_NUMBER" ]; then
+        echo "No PR number found. Unable to fetch check runs."
         exit 1
     fi
 
-    echo "Commit SHA for PR #$PR_NUMBER: $COMMIT_SHA"
-}
+    echo "Fetching check runs for PR #$PR_NUMBER..."
 
-# Step 3: Get the check runs for the commit and list job names with statuses
-get_check_names_and_status() {
-    if [ -z "$COMMIT_SHA" ]; then
-        echo "No commit SHA found. Unable to fetch check runs."
-        exit 1
-    fi
-
-    echo "Fetching check names and statuses for PR #$PR_NUMBER using commit SHA $COMMIT_SHA..."
-    
-    # Fetch check runs for the commit (associated with the PR)
+    # Fetch check runs associated with the PR (use pulls/{pr_number}/check-runs)
     CHECK_RUNS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-        "$API_URL/repos/$GITHUB_OWNER/$GITHUB_REPO/commits/$COMMIT_SHA/check-runs")
+        "$API_URL/repos/$GITHUB_OWNER/$GITHUB_REPO/pulls/$PR_NUMBER/check-runs")
 
     # Debug: print the full response to see what is being returned
     # echo "$CHECK_RUNS"
@@ -82,5 +65,4 @@ get_check_names_and_status() {
 
 # Main Execution
 create_pr
-get_commit_sha
-get_check_names_and_status
+get_pr_check_runs
