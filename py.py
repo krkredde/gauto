@@ -6,8 +6,8 @@ GITHUB_API_URL = "https://api.github.com"
 
 # Your GitHub credentials
 GITHUB_TOKEN = "your_personal_access_token"
-REPO_OWNER = "your_github_username_or_org"
-REPO_NAME = "your_repo_name"
+REPO_OWNER = "krkredde"
+REPO_NAME = "gauto"
 
 # Headers for GitHub API requests
 HEADERS = {
@@ -35,38 +35,38 @@ def create_pull_request(title, body, head_branch, base_branch):
     if response.status_code == 201:
         pr_data = response.json()
         print(f"PR Created: {pr_data['html_url']}")
-        return pr_data['number']
+        return pr_data['number'], pr_data['head']['sha']  # Return PR number and commit SHA
     else:
         print(f"Error creating PR: {response.status_code}, {response.text}")
-        return None
+        return None, None
 
-# Function to get check runs for a pull request
-def get_check_runs_for_pr(pr_number):
-    url = f"{GITHUB_API_URL}/repos/{REPO_OWNER}/{REPO_NAME}/pulls/{pr_number}/check-runs"
+# Function to get check suites for the commit associated with the PR
+def get_check_suites_for_commit(commit_sha):
+    url = f"{GITHUB_API_URL}/repos/{REPO_OWNER}/{REPO_NAME}/commits/{commit_sha}/check-suites"
     response = requests.get(url, headers=HEADERS)
 
     if response.status_code == 200:
-        check_runs = response.json().get("check_runs", [])
-        if not check_runs:
-            print("No check runs found for this PR.")
+        check_suites = response.json().get("check_suites", [])
+        if not check_suites:
+            print("No check suites found for this commit.")
         else:
-            print("\nCheck Runs for PR:")
-            for check in check_runs:
-                # Display the check name, status, and conclusion
-                print(f"- {check['name']} ({check['status']}) - Conclusion: {check['conclusion']}")
+            print("\nCheck Suites for Commit:")
+            for check_suite in check_suites:
+                # Display the check suite name, status, and conclusion
+                print(f"- {check_suite['app']['name']} ({check_suite['status']}) - Conclusion: {check_suite['conclusion']}")
     else:
-        print(f"Error fetching check runs: {response.status_code}, {response.text}")
+        print(f"Error fetching check suites: {response.status_code}, {response.text}")
 
 # Example usage
 if __name__ == "__main__":
     # Create a PR with the 'auto_merge' branch as the source and 'main' as the target
-    pr_number = create_pull_request(
+    pr_number, commit_sha = create_pull_request(
         title="Automated Merge PR",
         body="This is an automated pull request to merge 'auto_merge' into 'main'.",
         head_branch="auto_merge",  # Source branch
         base_branch="main"         # Target branch
     )
 
-    # If PR was created successfully, get its check run status
-    if pr_number:
-        get_check_runs_for_pr(pr_number)
+    # If PR was created successfully, get its check suite status
+    if pr_number and commit_sha:
+        get_check_suites_for_commit(commit_sha)
