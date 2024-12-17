@@ -10,7 +10,6 @@ PR_TITLE="Automated PR"
 PR_BODY="This is an automated PR created using a shell script."
 API_URL="https://api.github.com"
 
-
 # Step 1: Create a Pull Request
 create_pr() {
     echo "Creating PR from $SOURCE_BRANCH to $TARGET_BRANCH..."
@@ -62,13 +61,16 @@ get_check_names_and_status() {
     CHECK_RUNS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
         "$API_URL/repos/$GITHUB_OWNER/$GITHUB_REPO/commits/$COMMIT_SHA/check-runs")
 
+    # Debug: print the full response to see what is being returned
+    # echo "$CHECK_RUNS"
+
     # Check if the response contains check runs
     if echo "$CHECK_RUNS" | grep -q '"check_name"'; then
         echo "List of job names and statuses associated with PR #$PR_NUMBER:"
         
-        # Extract and list job names and statuses
+        # Extract and list job names and statuses (filtering check_name, status, and conclusion)
         echo "$CHECK_RUNS" | grep -o '"check_name": "[^"]*' | cut -d '"' -f 4 | while read check_name; do
-            # Extract the status for each check (success, failure, etc.)
+            # Extract the status for each check (queued, in_progress, completed)
             status=$(echo "$CHECK_RUNS" | grep -o "\"check_name\": \"$check_name\".*\"status\": \"[^\"]*" | cut -d '"' -f 8)
             conclusion=$(echo "$CHECK_RUNS" | grep -o "\"check_name\": \"$check_name\".*\"conclusion\": \"[^\"]*" | cut -d '"' -f 8)
             echo "Job Name: $check_name, Status: $status, Conclusion: $conclusion"
