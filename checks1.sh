@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#############
 # Configuration variables
 GITHUB_TOKEN="YOUR_GITHUB_TOKEN"    # Replace with your GitHub Personal Access Token
 REPO_OWNER="krkredde"               # Replace with the GitHub repository owner
