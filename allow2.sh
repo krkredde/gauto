@@ -26,6 +26,9 @@ create_pr() {
 EOF
     )
 
+    # Debug: Print the full response to troubleshoot PR creation
+    echo "PR creation response: $PR_RESPONSE"
+
     # Extract the PR number and commit SHA from the response
     PR_NUMBER=$(echo "$PR_RESPONSE" | grep -o '"number": [0-9]*' | cut -d ':' -f 2 | tr -d '[:space:]')
     COMMIT_SHA=$(echo "$PR_RESPONSE" | grep -o '"head": {[^}]*"sha": "[^"]*' | cut -d '"' -f 6)
@@ -38,7 +41,6 @@ EOF
     echo "Pull request created successfully. PR Number: $PR_NUMBER"
     echo "Commit SHA for PR #$PR_NUMBER: $COMMIT_SHA"
 }
-
 # Step 2: Get the check runs associated with the PR's commit
 get_check_runs() {
     if [ -z "$COMMIT_SHA" ]; then
