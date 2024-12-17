@@ -36,20 +36,20 @@ wait_for_checks() {
     echo "Waiting for checks to pass for PR #$PR_NUMBER..."
 
     while true; do
+        # Fetch PR status
         PR_STATUS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
             "$API_URL/repos/$GITHUB_OWNER/$GITHUB_REPO/pulls/$PR_NUMBER")
 
-        # Check the entire PR status for debugging
+        # Print the full PR status response for debugging
         echo "PR Status Response: $PR_STATUS"
 
-        # Get mergeable status
+        # Check for the mergeable field
         MERGEABLE=$(echo "$PR_STATUS" | grep -o '"mergeable": [^,]*' | cut -d ':' -f 2 | tr -d '[:space:]')
 
-        # Check if there are failing checks
-        CHECK_STATUS=$(echo "$PR_STATUS" | grep -o '"state": "[^"]*' | cut -d '"' -f 4)
-        echo "Status of checks: $CHECK_STATUS"
-
-        if [[ "$MERGEABLE" == "true" ]]; then
+        # Handle cases where mergeable is missing or null
+        if [[ -z "$MERGEABLE" ]]; then
+            echo "Mergeable field is missing. This might indicate the PR is still processing or incomplete."
+        elif [[ "$MERGEABLE" == "true" ]]; then
             echo "PR #$PR_NUMBER is mergeable!"
             break
         elif [[ "$MERGEABLE" == "false" ]]; then
@@ -57,14 +57,24 @@ wait_for_checks() {
             exit 1
         elif [[ "$MERGEABLE" == "null" ]]; then
             echo "PR #$PR_NUMBER is still being processed or there are unresolved conflicts."
-            sleep 10  # Wait for 10 seconds before checking again
         else
-            echo "Unexpected mergeable value: $MERGEABLE. Exiting."
+            echo "Unexpected mergeable value: $MERGEABLE"
             exit 1
         fi
+
+        # Check for individual status checks (optional: you can extend this)
+        CHECKS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "$API_URL/repos/$GITHUB_OWNER/$GITHUB_REPO/pulls/$PR_NUMBER/checks")
+
+        # Print status checks response
+        echo "PR Checks Status: $CHECKS"
+
+        # You can add logic to check specific statuses for your CI checks here
+
+        echo "Waiting 10 seconds before re-checking..."
+        sleep 10  # Wait for 10 seconds before checking again
     done
 }
-
 
 # Merge the PR
 merge_pr() {
