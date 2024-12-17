@@ -6,8 +6,8 @@ GITHUB_API_URL = "https://api.github.com"
 
 # Your GitHub credentials
 GITHUB_TOKEN = "your_personal_access_token"
-REPO_OWNER = "krkredde"
-REPO_NAME = "gauto"
+REPO_OWNER = "your_github_username_or_org"
+REPO_NAME = "your_repo_name"
 
 # Headers for GitHub API requests
 HEADERS = {
@@ -18,13 +18,18 @@ HEADERS = {
 # Function to create a pull request
 def create_pull_request(title, body, head_branch, base_branch):
     url = f"{GITHUB_API_URL}/repos/{REPO_OWNER}/{REPO_NAME}/pulls"
+    
+    # For a forked repository, ensure head is in the correct format
+    if REPO_OWNER != 'your-username':
+        head_branch = f"{REPO_OWNER}:{head_branch}"
+
     payload = {
         "title": title,
         "body": body,
-        "head": auto_merge,
-        "base": main
+        "head": head_branch,
+        "base": base_branch
     }
-    
+
     response = requests.post(url, headers=HEADERS, json=payload)
 
     if response.status_code == 201:
@@ -45,22 +50,23 @@ def get_check_runs_for_pr(pr_number):
         if not check_runs:
             print("No check runs found for this PR.")
         else:
-            print("Check Runs for PR:")
+            print("\nCheck Runs for PR:")
             for check in check_runs:
-                print(f"- {check['name']}: {check['status']} - {check['conclusion']}")
+                # Display the check name, status, and conclusion
+                print(f"- {check['name']} ({check['status']}) - Conclusion: {check['conclusion']}")
     else:
         print(f"Error fetching check runs: {response.status_code}, {response.text}")
 
 # Example usage
 if __name__ == "__main__":
-    # Create a PR (Modify as per your use case)
+    # Create a PR with the 'auto_merge' branch as the source and 'main' as the target
     pr_number = create_pull_request(
-        title="New feature implementation",
-        body="This PR adds a new feature to the project.",
-        head_branch="auto_merge",  # Your feature branch name
-        base_branch="main"             # The base branch (usually main or master)
+        title="Automated Merge PR",
+        body="This is an automated pull request to merge 'auto_merge' into 'main'.",
+        head_branch="auto_merge",  # Source branch
+        base_branch="main"         # Target branch
     )
-    
+
     # If PR was created successfully, get its check run status
     if pr_number:
         get_check_runs_for_pr(pr_number)
