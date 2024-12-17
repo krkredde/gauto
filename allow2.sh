@@ -26,23 +26,37 @@ create_pr() {
 EOF
     )
 
-    # Extract the PR number from the response
+    # Extract the PR number and SHA from the response
     PR_NUMBER=$(echo "$PR_RESPONSE" | grep -o '"number": [0-9]*' | cut -d ':' -f 2 | tr -d '[:space:]')
+    PR_SHA=$(echo "$PR_RESPONSE" | grep -o '"sha": "[^"]*' | cut -d '"' -f 4)
     echo "Pull request created successfully. PR Number: $PR_NUMBER"
+    echo "Commit SHA for PR: $PR_SHA"
 }
 
 # Step 2: List all check names for the PR
 get_check_names() {
-    echo "Fetching check names for PR #$PR_NUMBER..."
+    if [ -z "$PR_SHA" ]; then
+        echo "No commit SHA found. Unable to fetch check runs."
+        exit 1
+    fi
+
+    echo "Fetching check names for PR #$PR_NUMBER using commit SHA $PR_SHA..."
     
+    # Fetch check runs for the commit (associated with the PR)
     CHECK_RUNS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-        "$API_URL/repos/$GITHUB_OWNER/$GITHUB_REPO/pulls/$PR_NUMBER/checks")
+        "$API_URL/repos/$GITHUB_OWNER/$GITHUB_REPO/commits/$PR_SHA/check-runs")
     
-    # Extract and list all check names
-    echo "List of check names associated with PR #$PR_NUMBER:"
-    echo "$CHECK_RUNS" | grep -o '"check_name": "[^"]*' | cut -d '"' -f 4
+    # Check if there are any check runs
+    if echo "$CHECK_RUNS" | grep -q '"check_name"'; then
+        echo "List of check names associated with PR #$PR_NUMBER:"
+        # Extract and list all check names
+        echo "$CHECK_RUNS" | grep -o '"check_name": "[^"]*' | cut -d '"' -f 4
+    else
+        echo "No check runs found for this PR."
+    fi
 }
 
 # Main Execution
 create_pr
 get_check_names
+
