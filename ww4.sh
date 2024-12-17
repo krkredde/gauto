@@ -121,67 +121,67 @@ EOF
     else
         echo "$CONTEXTS" | jq -r '.[] | "\(.state): \(.description)"'
     fi
-    
+
     # Display aggregated state (rollup)
     echo "Overall Check State: $ROLLOVER_STATE"
 }
 
-# Wait for all checks to complete
-wait_for_checks_to_complete() {
-    echo "Waiting for all checks to complete for PR #$PR_ID..."
-
-    while true; do
-        get_pr_checks
-        CHECK_STATUS=$?
-
-        # If there are no checks or status is null, retry later
-        if [[ $CHECK_STATUS -eq 1 ]]; then
-            echo "No status checks yet for PR #$PR_ID. Retrying in 10 seconds..."
-        elif [[ "$ROLLOVER_STATE" == "SUCCESS" ]]; then
-            echo "All checks passed for PR #$PR_ID. Proceeding to merge."
-            break
-        elif [[ "$ROLLOVER_STATE" == "FAILURE" ]]; then
-            echo "Some checks failed for PR #$PR_ID. Aborting merge."
-            exit 1
-        fi
-
-        echo "Waiting 10 seconds before checking again..."
-        sleep 10
-    done
-}
+# # Wait for all checks to complete
+# wait_for_checks_to_complete() {
+#     echo "Waiting for all checks to complete for PR #$PR_ID..."
+#
+#     while true; do
+#         get_pr_checks
+#         CHECK_STATUS=$?
+#
+#         # If there are no checks or status is null, retry later
+#         if [[ $CHECK_STATUS -eq 1 ]]; then
+#             echo "No status checks yet for PR #$PR_ID. Retrying in 10 seconds..."
+#         elif [[ "$ROLLOVER_STATE" == "SUCCESS" ]]; then
+#             echo "All checks passed for PR #$PR_ID. Proceeding to merge."
+#             break
+#         elif [[ "$ROLLOVER_STATE" == "FAILURE" ]]; then
+#             echo "Some checks failed for PR #$PR_ID. Aborting merge."
+#             exit 1
+#         fi
+#
+#         echo "Waiting 10 seconds before checking again..."
+#         sleep 10
+#     done
+# }
 
 # Merge the Pull Request
-merge_pr() {
-    echo "Merging PR #$PR_ID..."
-
-    MERGE_RESPONSE=$(curl -s -X POST \
-        -H "Authorization: Bearer $GITHUB_TOKEN" \
-        -d @- "$GITHUB_API_URL" <<EOF
-{
-  "query": "mutation {
-    mergePullRequest(input: {
-      pullRequestId: \"$PR_ID\",
-      commitMessage: \"Merging PR #$PR_ID\"
-    }) {
-      pullRequest {
-        id
-        merged
-      }
-    }
-  }"
-}
-EOF
-    )
-
-    MERGE_STATUS=$(echo "$MERGE_RESPONSE" | jq -r '.data.mergePullRequest.pullRequest.merged')
-
-    if [[ "$MERGE_STATUS" == "true" ]]; then
-        echo "Pull request #$PR_ID merged successfully."
-    else
-        echo "Failed to merge PR #$PR_ID. Response: $MERGE_RESPONSE"
-        exit 1
-    fi
-}
+# merge_pr() {
+#     echo "Merging PR #$PR_ID..."
+#
+#     MERGE_RESPONSE=$(curl -s -X POST \
+#         -H "Authorization: Bearer $GITHUB_TOKEN" \
+#         -d @- "$GITHUB_API_URL" <<EOF
+# {
+#   "query": "mutation {
+#     mergePullRequest(input: {
+#       pullRequestId: \"$PR_ID\",
+#       commitMessage: \"Merging PR #$PR_ID\"
+#     }) {
+#       pullRequest {
+#         id
+#         merged
+#       }
+#     }
+#   }"
+# }
+# EOF
+#     )
+#
+#     MERGE_STATUS=$(echo "$MERGE_RESPONSE" | jq -r '.data.mergePullRequest.pullRequest.merged')
+#
+#     if [[ "$MERGE_STATUS" == "true" ]]; then
+#         echo "Pull request #$PR_ID merged successfully."
+#     else
+#         echo "Failed to merge PR #$PR_ID. Response: $MERGE_RESPONSE"
+#         exit 1
+#     fi
+# }
 
 # Main script execution
 get_repository_id
