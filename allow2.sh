@@ -56,7 +56,7 @@ get_check_runs() {
     if echo "$CHECK_RUNS" | grep -q '"check_name"'; then
         echo "List of job names and statuses associated with PR #$PR_NUMBER:"
         
-        # Extract and list job names and statuses (filtering check_name, status, and conclusion)
+        # Extract and list job names, statuses, and conclusions
         echo "$CHECK_RUNS" | grep -o '"check_name": "[^"]*' | cut -d '"' -f 4 | while read check_name; do
             # Extract the status for each check (queued, in_progress, completed)
             status=$(echo "$CHECK_RUNS" | grep -o "\"check_name\": \"$check_name\".*\"status\": \"[^\"]*" | cut -d '"' -f 8)
