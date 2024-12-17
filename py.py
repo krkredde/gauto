@@ -21,8 +21,8 @@ def create_pull_request(title, body, head_branch, base_branch):
     payload = {
         "title": title,
         "body": body,
-        "head": head_branch,
-        "base": base_branch
+        "head": auto_merge,
+        "base": main
     }
     
     response = requests.post(url, headers=HEADERS, json=payload)
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     pr_number = create_pull_request(
         title="New feature implementation",
         body="This PR adds a new feature to the project.",
-        head_branch="feature-branch",  # Your feature branch name
+        head_branch="auto_merge",  # Your feature branch name
         base_branch="main"             # The base branch (usually main or master)
     )
     
