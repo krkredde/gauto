@@ -4,11 +4,12 @@
 GITHUB_TOKEN="your_github_token"
 GITHUB_OWNER="krkredde"
 GITHUB_REPO="gauto"
-SOURCE_BRANCH="main"
-TARGET_BRANCH="auto_merge"  # Target branch to merge into
+SOURCE_BRANCH="auto_merge"
+TARGET_BRANCH="main"  # Target branch to merge into
 PR_TITLE="Automated PR"
 PR_BODY="This is an automated PR created using a shell script."
 API_URL="https://api.github.com"
+
 
 # Step 1: Create a Pull Request
 create_pr() {
@@ -48,28 +49,30 @@ get_commit_sha() {
     echo "Commit SHA for PR #$PR_NUMBER: $COMMIT_SHA"
 }
 
-# Step 3: List all check names for the PR using commit SHA
-get_check_names() {
+# Step 3: Get the check runs for the commit and list job names with statuses
+get_check_names_and_status() {
     if [ -z "$COMMIT_SHA" ]; then
         echo "No commit SHA found. Unable to fetch check runs."
         exit 1
     fi
 
-    echo "Fetching check names for PR #$PR_NUMBER using commit SHA $COMMIT_SHA..."
+    echo "Fetching check names and statuses for PR #$PR_NUMBER using commit SHA $COMMIT_SHA..."
     
     # Fetch check runs for the commit (associated with the PR)
     CHECK_RUNS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
         "$API_URL/repos/$GITHUB_OWNER/$GITHUB_REPO/commits/$COMMIT_SHA/check-runs")
 
-    # Debug: print the full response to see what is being returned
-    echo "Full API Response for check runs:"
-    echo "$CHECK_RUNS"
-
-    # Check if there are any check runs
+    # Check if the response contains check runs
     if echo "$CHECK_RUNS" | grep -q '"check_name"'; then
-        echo "List of check names associated with PR #$PR_NUMBER:"
-        # Extract and list all check names
-        echo "$CHECK_RUNS" | grep -o '"check_name": "[^"]*' | cut -d '"' -f 4
+        echo "List of job names and statuses associated with PR #$PR_NUMBER:"
+        
+        # Extract and list job names and statuses
+        echo "$CHECK_RUNS" | grep -o '"check_name": "[^"]*' | cut -d '"' -f 4 | while read check_name; do
+            # Extract the status for each check (success, failure, etc.)
+            status=$(echo "$CHECK_RUNS" | grep -o "\"check_name\": \"$check_name\".*\"status\": \"[^\"]*" | cut -d '"' -f 8)
+            conclusion=$(echo "$CHECK_RUNS" | grep -o "\"check_name\": \"$check_name\".*\"conclusion\": \"[^\"]*" | cut -d '"' -f 8)
+            echo "Job Name: $check_name, Status: $status, Conclusion: $conclusion"
+        done
     else
         echo "No check runs found for this PR."
     fi
@@ -78,4 +81,4 @@ get_check_names() {
 # Main Execution
 create_pr
 get_commit_sha
-get_check_names
+get_check_names_and_status
