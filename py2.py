@@ -77,3 +77,12 @@ if __name__ == "__main__":
     # If PR was created successfully, get its check run status
     if pr_number and commit_sha:
         get_check_runs_for_commit(commit_sha)
+
+
+#output
+# PR Created: https://github.com/krkredde/gauto/pull/54
+
+# Unique Check Runs for Commit:
+# - Run npm on Ubuntu (completed) - Conclusion: success
+# - build (completed) - Conclusion: success
+# - Run PSScriptAnalyzer on Windows (completed) - Conclusion: success
