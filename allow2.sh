@@ -4,8 +4,8 @@
 GITHUB_TOKEN="your_github_token"
 GITHUB_OWNER="krkredde"
 GITHUB_REPO="gauto"
-SOURCE_BRANCH="auto_merge"
-TARGET_BRANCH="main"  # Target branch to merge into
+SOURCE_BRANCH="main"
+TARGET_BRANCH="auto_merge"  # Target branch to merge into
 PR_TITLE="Automated PR"
 PR_BODY="This is an automated PR created using a shell script."
 API_URL="https://api.github.com"
