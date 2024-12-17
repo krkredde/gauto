@@ -70,3 +70,16 @@ if __name__ == "__main__":
     # If PR was created successfully, get its check suite status
     if pr_number and commit_sha:
         get_check_suites_for_commit(commit_sha)
+
+
+
+output:
+PR Created: https://github.com/krkredde/gauto/pull/52
+
+Check Suites for Commit:
+- GitHub Actions (completed) - Conclusion: success
+- GitHub Actions (completed) - Conclusion: success
+- GitHub Actions (completed) - Conclusion: success
+- GitHub Actions (completed) - Conclusion: success
+- GitHub Actions (completed) - Conclusion: success
+- GitHub Actions (completed) - Conclusion: success
