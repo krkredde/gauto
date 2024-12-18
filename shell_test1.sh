@@ -51,6 +51,7 @@ get_check_runs_for_commit() {
   fi
 
   echo -e "\nAll Check Runs for Commit:"
+  # Using `paste` in a different way to avoid process substitution
   paste <(echo "$check_runs") <(echo "$statuses") <(echo "$conclusions") | while IFS=$'\t' read -r check_name status conclusion; do
     echo "- $check_name ($status) - Conclusion: $conclusion"
   done
