@@ -33,8 +33,8 @@ EOF
         -d "$payload" "$url")
 
     # Extract PR number and commit SHA from the response
-    pr_number=$(echo "$response" | grep -oP '"number":\s*\K[0-9]+')
-    commit_sha=$(echo "$response" | grep -oP '"sha":\s*"\K[a-f0-9]+')
+    pr_number=$(echo "$response" | grep -o '"number": [0-9]\+' | awk -F': ' '{print $2}')
+    commit_sha=$(echo "$response" | grep -o '"sha": "[a-f0-9]\+"' | awk -F': "' '{print $2}' | sed 's/"//g')
 
     if [ -z "$pr_number" ] || [ -z "$commit_sha" ]; then
         echo "Error creating PR: $response"
@@ -60,7 +60,7 @@ get_check_runs_for_commit() {
 
     # Extract check run names, statuses, and conclusions
     echo "All Check Runs for Commit:"
-    check_runs=$(echo "$response" | grep -oP '"name":\s*".*?"|"status":\s*".*?"|"conclusion":\s*".*?"')
+    check_runs=$(echo "$response" | grep -o '"name": "[^"]*"\|"status": "[^"]*"\|"conclusion": "[^"]*"')
 
     if [ -z "$check_runs" ]; then
         echo "No check runs found for this commit."
@@ -69,9 +69,9 @@ get_check_runs_for_commit() {
 
     echo "$check_runs" | while read -r line; do
         # Parse the name, status, and conclusion
-        check_name=$(echo "$line" | grep -oP '"name":\s*".*?"' | sed 's/"name":\s*"\(.*\)"/\1/')
-        status=$(echo "$line" | grep -oP '"status":\s*".*?"' | sed 's/"status":\s*"\(.*\)"/\1/')
-        conclusion=$(echo "$line" | grep -oP '"conclusion":\s*".*?"' | sed 's/"conclusion":\s*"\(.*\)"/\1/')
+        check_name=$(echo "$line" | grep -o '"name": "[^"]*"' | sed 's/"name": "//' | sed 's/"//g')
+        status=$(echo "$line" | grep -o '"status": "[^"]*"' | sed 's/"status": "//' | sed 's/"//g')
+        conclusion=$(echo "$line" | grep -o '"conclusion": "[^"]*"' | sed 's/"conclusion": "//' | sed 's/"//g')
 
         # Display check run information
         echo "- $check_name ($status) - Conclusion: $conclusion"
