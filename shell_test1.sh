@@ -51,8 +51,16 @@ get_check_runs_for_commit() {
   fi
 
   echo -e "\nAll Check Runs for Commit:"
-  # Using `paste` in a different way to avoid process substitution
-  paste <(echo "$check_runs") <(echo "$statuses") <(echo "$conclusions") | while IFS=$'\t' read -r check_name status conclusion; do
+  # Create arrays from the check runs, statuses, and conclusions
+  IFS=$'\n' read -r -d '' -a check_run_array <<< "$check_runs"
+  IFS=$'\n' read -r -d '' -a status_array <<< "$statuses"
+  IFS=$'\n' read -r -d '' -a conclusion_array <<< "$conclusions"
+
+  # Loop through arrays to display check runs
+  for i in "${!check_run_array[@]}"; do
+    check_name="${check_run_array[$i]}"
+    status="${status_array[$i]}"
+    conclusion="${conclusion_array[$i]}"
     echo "- $check_name ($status) - Conclusion: $conclusion"
   done
 
