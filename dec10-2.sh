@@ -1,7 +1,7 @@
 #!/bin/bash
-#############
+
 # Configuration variables
-GITHUB_TOKEN="YOUR_GITHUB_TOKEN"    # Replace with your GitHub Personal Access Token
+GITHUB_TOKEN="xxxxx"    # Replace with your GitHub Personal Access Token
 REPO_OWNER="krkredde"               # Replace with the GitHub repository owner
 REPO_NAME="gauto"                   # Replace with the GitHub repository name
 BRANCH_NAME="auto_merge"            # Replace with your feature branch
@@ -10,6 +10,7 @@ PR_TITLE="Automated PR to main"     # The title of the PR
 PR_BODY="This PR is automatically created and merged from the auto_merge branch."
 API_URL="https://api.github.com"
 HEADERS="Authorization: token $GITHUB_TOKEN"
+ALLOW_AUTO_MERGE=true              # Set to true to auto-merge when checks pass, false to disable
 
 # Function to create Pull Request using GitHub REST API
 create_pr() {
@@ -28,12 +29,11 @@ create_pr() {
 EOF
   )
   
-  # Extract PR URL, ID, and number
+  # Extract PR URL and number
   PR_URL=$(echo "$pr_response" | grep -o '"html_url":\s*"[^"]*' | sed 's/"html_url": "//')
-  PR_ID=$(echo "$pr_response" | grep -o '"id":\s*[0-9]*' | sed 's/"id": //')
   PR_NUMBER=$(echo "$pr_response" | grep -o '"number":\s*[0-9]*' | sed 's/"number": //')
 
-  if [ -z "$PR_URL" ] || [ -z "$PR_ID" ]; then
+  if [ -z "$PR_URL" ] || [ -z "$PR_NUMBER" ]; then
     echo "Error: Failed to create Pull Request."
     echo "Response from GitHub API: $pr_response"
     exit 1
@@ -55,7 +55,7 @@ check_ci_status() {
     exit 1
   fi
 
-  # Poll the check runs status every 30 seconds until all checks are completed and passed
+  # Poll the check runs status every 30 seconds until all checks are completed
   while true; do
     # Get check runs status for the commit
     check_runs_response=$(curl -s "$API_URL/repos/$REPO_OWNER/$REPO_NAME/commits/$commit_sha/check-runs" -H "$HEADERS")
@@ -65,14 +65,17 @@ check_ci_status() {
     check_conclusions=$(echo "$check_runs_response" | grep -o '"conclusion":\s*"[^"]*' | sed 's/"conclusion": "//')
     check_names=$(echo "$check_runs_response" | grep -o '"name":\s*"[^"]*' | sed 's/"name": "//')
 
-    # Initialize lists for successful and failing checks
-    successful_checks=()
-    failing_checks=()
-    in_progress_checks=()
-    queued_checks=()
+    # Initialize counters
+    successful_count=0
+    failing_count=0
+    in_progress_count=0
+    queued_count=0
 
     # Loop through each check run and classify them by conclusion
     count=0
+    total_checks=0
+    all_checks_completed=true
+
     for check in $check_names; do
       status=$(echo "$check_statuses" | sed -n "${count}p")
       conclusion=$(echo "$check_conclusions" | sed -n "${count}p")
@@ -88,43 +91,45 @@ check_ci_status() {
 
       # Classify checks based on their status and conclusion
       if [ "$status" == "in_progress" ]; then
-        in_progress_checks+=("$check_name")
+        in_progress_count=$((in_progress_count + 1))
+        all_checks_completed=false  # At least one check is still in progress
       elif [ "$status" == "queued" ]; then
-        queued_checks+=("$check_name")
+        queued_count=$((queued_count + 1))
+        all_checks_completed=false  # At least one check is still queued
       elif [ "$conclusion" == "success" ]; then
-        successful_checks+=("$check_name")
+        successful_count=$((successful_count + 1))
       elif [ "$conclusion" == "failure" ] || [ "$conclusion" == "neutral" ]; then
-        failing_checks+=("$check_name")
+        failing_count=$((failing_count + 1))
       fi
 
+      total_checks=$((total_checks + 1))
       count=$((count + 1))
     done
 
-    # Print check status summary
-    echo "Checking status of checks..."
-
-    if [ ${#in_progress_checks[@]} -gt 0 ]; then
-      echo "In Progress Checks: ${in_progress_checks[@]}"
-    fi
-    if [ ${#queued_checks[@]} -gt 0 ]; then
-      echo "Queued Checks: ${queued_checks[@]}"
-    fi
-    if [ ${#failing_checks[@]} -gt 0 ]; then
-      echo "Failing Checks: ${failing_checks[@]}"
-    fi
-    if [ ${#successful_checks[@]} -gt 0 ]; then
-      echo "Successful Checks: ${successful_checks[@]}"
-    fi
+    # Print summary of check statuses
+    echo "Summary of Checks:"
+    echo "Total Checks: $total_checks"
+    echo "Successful Checks: $successful_count"
+    echo "Failing Checks: $failing_count"
+    echo "In Progress Checks: $in_progress_count"
+    echo "Queued Checks: $queued_count"
 
     # If there are any checks in progress or queued, wait
-    if [ ${#in_progress_checks[@]} -gt 0 ] || [ ${#queued_checks[@]} -gt 0 ]; then
+    if [ "$all_checks_completed" == false ]; then
       echo "Checks are still in progress or queued. Waiting..."
-    # If there are failed checks, wait
-    elif [ ${#failing_checks[@]} -gt 0 ]; then
-      echo "Some checks are failing. Waiting for the checks to pass..."
-    else
+    # If all checks are completed and all are successful, merge the PR
+    elif [ $successful_count -eq $total_checks ]; then
       echo "All checks have passed."
+      # Check if we should auto-merge
+      if [ "$ALLOW_AUTO_MERGE" == true ]; then
+        echo "Merging the PR automatically..."
+        merge_pr
+      else
+        echo "Auto-merge is disabled. PR will not be merged."
+      fi
       break
+    else
+      echo "Not all checks have passed. Waiting for all checks to pass..."
     fi
 
     # Wait for 30 seconds before polling again
@@ -165,5 +170,3 @@ create_pr
 # Step 2: Monitor the CI checks until they pass
 check_ci_status
 
-# Step 3: Merge the Pull Request once all checks pass
-merge_pr
