@@ -215,3 +215,40 @@ import time
 #         get_commit_statuses(commit_sha)
 #         get_pr_statuses(pr_number)
 
+
+
+#########
+
+# # Function to check the status of specific check runs and print status
+# def check_and_print_status_of_checks(pr_number, commit_sha):
+#     check_runs = get_check_runs_for_commit(commit_sha)
+
+#     if not check_runs:
+#         print("No check runs found.")
+#         return
+
+#     # Initialize variables to hold the status of specific checks
+#     npm_status = None
+#     build_status = None
+
+#     # Iterate over each check run to find the required ones
+#     for check in check_runs:
+#         check_name = check['name']
+#         conclusion = check.get('conclusion', 'Not completed yet')  # Default if conclusion is missing
+
+#         # Print the name and conclusion of each check run (for debugging purposes)
+#         print(f"Check Name: {check_name}, Conclusion: {conclusion}")
+
+#         # Check if the specific checks are successful
+#         if check_name == "Run npm on Ubuntu":
+#             npm_status = conclusion
+#         elif check_name == "build":
+#             build_status = conclusion
+
+#     # Print the current status of required checks
+#     if npm_status:
+#         print(f"\nStatus of 'Run npm on Ubuntu': {npm_status}")
+#     if build_status:
+#         print(f"Status of 'build': {build_status}")
+
+
