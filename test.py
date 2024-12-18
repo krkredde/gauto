@@ -171,3 +171,47 @@ import time
 #         print(f"Failed to get check runs after {retries} retries.")
 
 
+#############
+
+# # Function to get PR statuses
+# def get_pr_statuses(pr_number):
+#     url = f"{GITHUB_API_URL}/repos/{REPO_OWNER}/{REPO_NAME}/pulls/{pr_number}/status"
+#     response = requests.get(url, headers=HEADERS)
+
+#     if response.status_code == 200:
+#         pr_status = response.json()
+#         print(f"PR Status for PR #{pr_number}:")
+#         for status in pr_status.get("statuses", []):
+#             print(f"- {status['context']} - State: {status['state']} - Description: {status['description']}")
+#     else:
+#         print(f"Error fetching PR statuses: {response.status_code}, {response.text}")
+
+# # Function to get commit statuses directly
+# def get_commit_statuses(commit_sha):
+#     url = f"{GITHUB_API_URL}/repos/{REPO_OWNER}/{REPO_NAME}/commits/{commit_sha}/status"
+#     response = requests.get(url, headers=HEADERS)
+
+#     if response.status_code == 200:
+#         commit_status = response.json()
+#         print(f"Commit Status for commit {commit_sha}:")
+#         for status in commit_status.get("statuses", []):
+#             print(f"- {status['context']} - State: {status['state']} - Description: {status['description']}")
+#     else:
+#         print(f"Error fetching commit statuses: {response.status_code}, {response.text}")
+
+# # Example usage
+# if __name__ == "__main__":
+#     # Create a PR with the 'auto_merge' branch as the source and 'main' as the target
+#     pr_number, commit_sha = create_pull_request(
+#         title="Automated Merge PR",
+#         body="This is an automated pull request to merge 'auto_merge' into 'main'.",
+#         head_branch="auto_merge",  # Source branch
+#         base_branch="main"         # Target branch
+#     )
+
+#     # If PR was created successfully, fetch statuses for the commit and PR
+#     if pr_number and commit_sha:
+#         print(f"Commit SHA: {commit_sha}")
+#         get_commit_statuses(commit_sha)
+#         get_pr_statuses(pr_number)
+
