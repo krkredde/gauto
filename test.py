@@ -120,3 +120,16 @@ if __name__ == "__main__":
                     print(" - 'Run npm on Ubuntu' check failed.")
                 if build_status != "success":
                     print(" - 'build' check failed.")
+
+#output
+
+# PR Created: https://github.com/krkredde/gauto/pull/57
+
+# All Check Runs for Commit:
+# - Run npm on Ubuntu (completed) - Conclusion: success
+# - build (completed) - Conclusion: success
+# - Run PSScriptAnalyzer on Windows (completed) - Conclusion: success
+
+# Status of 'Run npm on Ubuntu': success
+# Status of 'build': success
+# PR #57 has been successfully merged!
