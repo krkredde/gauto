@@ -133,3 +133,41 @@ if __name__ == "__main__":
 # Status of 'Run npm on Ubuntu': success
 # Status of 'build': success
 # PR #57 has been successfully merged!
+
+
+import time
+
+# # Function to get check runs for the commit associated with the PR (with retry)
+# def get_check_runs_for_commit(commit_sha, retries=10, delay=5):
+#     url = f"{GITHUB_API_URL}/repos/{REPO_OWNER}/{REPO_NAME}/commits/{commit_sha}/check-runs"
+    
+#     for _ in range(retries):
+#         response = requests.get(url, headers=HEADERS)
+
+#         if response.status_code == 200:
+#             check_runs = response.json().get("check_runs", [])
+#             if not check_runs:
+#                 print("No check runs found for this commit.")
+#             else:
+#                 # Remove duplicate check runs based on the 'name' of the check run
+#                 unique_check_runs = {}
+#                 for check in check_runs:
+#                     check_name = check['name']
+#                     if check_name not in unique_check_runs:
+#                         unique_check_runs[check_name] = check
+
+#                 # Display the unique check runs
+#                 print("\nUnique Check Runs for Commit:")
+#                 for check in unique_check_runs.values():
+#                     print(f"- {check['name']} ({check['status']}) - Conclusion: {check['conclusion']}")
+#             break  # Exit the loop if check runs are found and processed
+#         else:
+#             print(f"Error fetching check runs: {response.status_code}, {response.text}")
+        
+#         # Wait before retrying
+#         print(f"Waiting {delay} seconds before retrying...")
+#         time.sleep(delay)
+#     else:
+#         print(f"Failed to get check runs after {retries} retries.")
+
+
