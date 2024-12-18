@@ -67,6 +67,10 @@ get_check_runs_for_commit() {
         exit 1
     fi
 
+    # Initialize variables for npm and build check statuses
+    npm_status=""
+    build_status=""
+
     echo "$check_runs" | while read -r line; do
         # Parse the name, status, and conclusion
         check_name=$(echo "$line" | grep -o '"name": "[^"]*"' | sed 's/"name": "//' | sed 's/"//g')
