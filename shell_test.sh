@@ -135,3 +135,13 @@ if [ ! -z "$pr_number" ] && [ ! -z "$commit_sha" ]; then
         fi
     fi
 fi
+
+
+# output: it's not waiting for checks to pass
+
+# PR Created: https://github.com/krkredde/gauto/pull/60
+# Commit SHA: 01b2b1a886140aa4374e589f93a0d32f30a3b483
+# 8de698c6708b472a4164a1d4c3128fd31737b496
+# Required checks have not passed. PR will not be merged.
+#  - 'Run npm on Ubuntu' check failed.
+#  - 'build' check failed.
